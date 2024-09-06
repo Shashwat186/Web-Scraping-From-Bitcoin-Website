@@ -2,7 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 
-# MongoDB connection setup
 client = MongoClient('localhost', 27017) 
 db = client['scraping2']  
 collection = db['bitcoin_addresses'] 
