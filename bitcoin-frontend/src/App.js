@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import './App.css'; // Assuming you'll add some basic CSS for styling
 
 function App() {
   const [data, setData] = useState([]);
@@ -21,10 +22,21 @@ function App() {
 
   // Create an array of page numbers to display
   const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - 5 && i <= currentPage + 5)) {
+  if (totalPages <= 5) {
+    // If there are 5 or fewer pages, show all pages
+    for (let i = 1; i <= totalPages; i++) {
       pageNumbers.push(i);
     }
+  } else {
+    if (currentPage > 2) pageNumbers.push(1);
+    if (currentPage > 3) pageNumbers.push('...');
+
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pageNumbers.push(i);
+    }
+
+    if (currentPage < totalPages - 2) pageNumbers.push('...');
+    if (currentPage < totalPages - 1) pageNumbers.push(totalPages);
   }
 
   return (
@@ -71,13 +83,14 @@ function App() {
           onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
           disabled={currentPage === 1}
         >
-          Previous
+          «
         </button>
-        {pageNumbers.map(number => (
+        {pageNumbers.map((number, index) => (
           <button
-            key={number}
-            onClick={() => setCurrentPage(number)}
+            key={index}
+            onClick={() => number !== '...' && setCurrentPage(number)}
             className={currentPage === number ? 'active' : ''}
+            disabled={number === '...'}
           >
             {number}
           </button>
@@ -86,7 +99,7 @@ function App() {
           onClick={() => setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages))}
           disabled={currentPage === totalPages}
         >
-          Next
+          »
         </button>
       </div>
     </div>
