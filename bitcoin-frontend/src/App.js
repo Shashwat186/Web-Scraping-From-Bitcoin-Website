@@ -5,56 +5,27 @@ function App() {
   const [data, setData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const recordsPerPage = 100;
+  const recordsPerPage = 100; // Number of records per page
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`http://localhost:5000/data?page=${currentPage}&limit=${recordsPerPage}`);
-        if (response.data) {
-          setData(response.data.data);
-          setCurrentPage(response.data.current_page);
-          setTotalPages(response.data.total_pages);
-        } else {
-          console.error('Unexpected data format:', response.data);
-        }
-      } catch (error) {
+    // Fetch data for the current page
+    axios.get(`http://localhost:5000/data?page=${currentPage}&limit=${recordsPerPage}`)
+      .then(response => {
+        setData(response.data.records);
+        setTotalPages(response.data.totalPages);
+      })
+      .catch(error => {
         console.error('Error fetching data:', error);
-      }
-      setLoading(false);
-    };
-
-    fetchData();
+      });
   }, [currentPage]);
 
-  const handlePageChange = (page) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
+  // Create an array of page numbers to display
+  const pageNumbers = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= currentPage - 5 && i <= currentPage + 5)) {
+      pageNumbers.push(i);
     }
-  };
-
-  const renderRows = () => {
-    if (loading) return <tr><td colSpan="11">Loading...</td></tr>;
-    if (data.length === 0) return <tr><td colSpan="11">No data available</td></tr>;
-
-    return data.map((item, index) => (
-      <tr key={index}>
-        <td>{item.page_number || 'N/A'}</td>
-        <td>{item.row_data[0] || 'N/A'}</td>
-        <td>{item.row_data[1] || 'N/A'}</td>
-        <td>{item.row_data[2] || 'N/A'}</td>
-        <td>{item.row_data[3] || 'N/A'}</td>
-        <td>{item.row_data[4] || 'N/A'}</td>
-        <td>{item.row_data[5] || 'N/A'}</td>
-        <td>{item.row_data[6] || 'N/A'}</td>
-        <td>{item.row_data[7] || 'N/A'}</td>
-        <td>{item.row_data[8] || 'N/A'}</td>
-        <td>{item.row_data[9] || 'N/A'}</td>
-      </tr>
-    ));
-  };
+  }
 
   return (
     <div className="App">
@@ -76,21 +47,47 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {renderRows()}
+          {data.map((item, index) => (
+            <tr key={index}>
+              <td>{item.page_number}</td>
+              {item.row_data.map((dataPoint, dataIndex) => (
+                <td key={dataIndex}>{dataPoint}</td>
+              ))}
+              <td>{item.address}</td>
+              <td>{item.balance}</td>
+              <td>{item.percentage_of_coins}</td>
+              <td>{item.first_in}</td>
+              <td>{item.last_in}</td>
+              <td>{item.ins}</td>
+              <td>{item.first_out}</td>
+              <td>{item.last_out}</td>
+              <td>{item.outs}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
       <div className="pagination">
-        <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
-        {Array.from({ length: totalPages }, (_, i) => (
+        <button
+          onClick={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          Previous
+        </button>
+        {pageNumbers.map(number => (
           <button
-            key={i + 1}
-            onClick={() => handlePageChange(i + 1)}
-            className={i + 1 === currentPage ? 'active' : ''}
+            key={number}
+            onClick={() => setCurrentPage(number)}
+            className={currentPage === number ? 'active' : ''}
           >
-            {i + 1}
+            {number}
           </button>
         ))}
-        <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
+        <button
+          onClick={() => setCurrentPage(prevPage => Math.min(prevPage + 1, totalPages))}
+          disabled={currentPage === totalPages}
+        >
+          Next
+        </button>
       </div>
     </div>
   );
